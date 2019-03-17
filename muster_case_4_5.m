@@ -1,6 +1,8 @@
 kt = xlsread('kpi_tech.xlsx', 'C16:P27');
-coefficient = xlsread('tech_tech.xlsx','A14:L25');
+cof = xlsread('tech_tech.xlsx','A14:L25');
 target_oee = 8;
+target_ctm = 1
+target_qua = 0
 
 
 for i = 1:12
@@ -10,26 +12,24 @@ end
     
     
 %case 4
-    % 组合
+  
     chosen = uint8(nchoosek(1:12,4));
-    answer_4 = zeros(1,6);
+    answer_4 = zeros(1,8);
     flag=1;
     for i=1:nchoosek(12,4)
-        % 排列
         permutation4 = perms(chosen(i,:));
-        
         for j=1:factorial(4)
-            permutation=permutation4(j,:);
+            pmt=permutation4(j,:);
             
-            cof_mat = [coefficient(permutation(1),permutation(2)), ...
-                    coefficient(permutation(1),permutation(3)) ...
-                    coefficient(permutation(1),permutation(4)) ...
-                    coefficient(permutation(2),permutation(3)) ...
-                    coefficient(permutation(2),permutation(4)) ...
-                    coefficient(permutation(3),permutation(4)) ];
+            cof_mat = [cof(pmt(1),pmt(2)), ...
+                    cof(pmt(1),pmt(3)) ...
+                    cof(pmt(1),pmt(4)) ...
+                    cof(pmt(2),pmt(3)) ...
+                    cof(pmt(2),pmt(4)) ...
+                    cof(pmt(3),pmt(4)) ];
             
                 
-            %右上角矩阵有负数就跳过
+   
             if all(cof_mat(:) > 0)
                 continue
             end
@@ -42,35 +42,33 @@ end
 %                     || coefficient(permutation(3),permutation(4)) < 0
 %                 continue
 %             end
+            oee =    (4-0) * (kt(pmt(1),1) * kt(pmt(1),8) / kt(pmt(1),2)) ...
+                   + (4-1) * (kt(pmt(2),1) * kt(pmt(2),8) / kt(pmt(2),2)) * (1 + cof(pmt(1),pmt(2)))...
+                   + (4-2) * (kt(pmt(3),1) * kt(pmt(3),8) / kt(pmt(3),2)) * (1 + cof(pmt(2),pmt(3)))...
+                   + (4-3) * (kt(pmt(4),1) * kt(pmt(4),8) / kt(pmt(4),2)) * (1 + cof(pmt(3),pmt(4)));
             
-            % 算出相互影响的最后结果
-            
-            interaction = prod(cof_mat);
-            
-%             interaction = coefficient(permutation(1),permutation(2)) ...
-%                 * coefficient(permutation(1),permutation(3)) ...
-%                 * coefficient(permutation(1),permutation(4)) ...
-%                 * coefficient(permutation(2),permutation(3)) ...
-%                 * coefficient(permutation(2),permutation(4)) ...
-%                 * coefficient(permutation(3),permutation(4));
-            
-            % 计算指标
-            oee = interaction ...
-                * kt(permutation(1),1) * kt(permutation(1),8) / kt(permutation(1),2) ...
-                * kt(permutation(2),1) * kt(permutation(2),8) / kt(permutation(2),2) ...
-                * kt(permutation(3),1) * kt(permutation(3),8) / kt(permutation(3),2) ...
-                * kt(permutation(4),1) * kt(permutation(4),8) / kt(permutation(4),2);
-%             customersatisfication
-%             quality_cost
+        ctm_sa  =    (4-0) * (kt(pmt(1),1) * kt(pmt(1),9)  ...
+                   + (4-1) * (kt(pmt(2),1) * kt(pmt(2),9) * (1 + cof(pmt(1),pmt(2)))...
+                   + (4-2) * (kt(pmt(3),1) * kt(pmt(3),9) * (1 + cof(pmt(2),pmt(3)))...
+                   + (4-3) * (kt(pmt(4),1) * kt(pmt(4),9) * (1 + cof(pmt(3),pmt(4)));
+               
+       qly_cost =   ((4-0) * (kt(pmt(1),7) ...
+                   + (4-1) * (kt(pmt(2),7) * (1 + cof(pmt(1),pmt(2)))...
+                   + (4-2) * (kt(pmt(3),7) * (1 + cof(pmt(2),pmt(3)))...
+                   + (4-3) * (kt(pmt(4),7) * (1 + cof(pmt(3),pmt(4)))) * (-250);
+               
 
             if oee > target_oee
-%              customersatisfication
-%              quality_cost
-               answer_4(flag,1:4) = permutation;
+             ctm_sa > target_ctm
+             qly_cost < target_qua
+             
+               answer_4(flag,1:4) = pmt;
                answer_4(flag,6) = oee;
+               answer_4(flag,7) = ctm_sa;
+               answer_4(flag,8) = qly_cost;
 %               a_sort4 = sortrows(answer4,-5)  
-%                answer(flag,6) = cost;
-%                answer(flag,7) = time;        
+%               answer(flag,6) = cost;
+%               answer(flag,7) = time;            
                flag=flag+1;       
             end
         end
