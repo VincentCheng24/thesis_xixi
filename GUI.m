@@ -22,7 +22,7 @@ function varargout = GUI(varargin)
 
 % Edit the above text to modify the response to help GUI
 
-% Last Modified by GUIDE v2.5 18-Mar-2019 00:02:49
+% Last Modified by GUIDE v2.5 27-Mar-2019 00:50:33
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -71,7 +71,81 @@ function varargout = GUI_OutputFcn(hObject, eventdata, handles)
 
 % Get default command line output from handles structure
 varargout{1} = handles.output;
+% --- Executes on button press in start.
 
+
+%%
+
+function start_Callback(hObject, eventdata, handles)
+% hObject    handle to start (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+kt = xlsread('kpi_tech.xlsx', 'C16:P27');
+cof = xlsread('tech_tech.xlsx','A14:L25');
+const = xlsread('constraints.xlsx', 'C2:D13');
+
+target_oee = str2double(get(handles.target_oee, 'String'));
+target_ctm = str2double(get(handles.target_ctm, 'String'));
+target_qua = str2double(get(handles.target_qua, 'String'));
+time_const = str2double(get(handles.time_const, 'String'));
+invest_const = str2double(get(handles.invest_const, 'String'));
+
+weight_oee = str2double(get(handles.weight_oee, 'String'));
+weight_ctm = str2double(get(handles.weight_ctm, 'String'));
+weight_qua = str2double(get(handles.weight_qua, 'String'));
+
+result = clc_results(kt, cof, const, target_oee, target_ctm, target_qua, time_const, invest_const);
+% disp(handles.result_4)
+result(:,8) = -result(:,8);
+result_norm = normalize(result(:,6:8), 1, 'range');
+sum = weight_oee * result_norm(:,1) + weight_ctm * result_norm(:,2) +  weight_qua * result_norm(:,3);
+
+% result(:,6:8) = normalize(result(:,6:8), 1, 'range');
+% sum = weight_oee * result(:,6) + weight_ctm * result(:,7) +  weight_qua * result(:,8);
+
+result = [result, sum];
+result = sortrows(result, 9, 'descend');
+
+handles.result = result;
+% data = handles.result(:, 6:8);
+draw_3d(result_norm)
+set(handles.uitable2, 'Data', handles.result);
+
+
+% --- Executes on button press in clear.
+function clear_Callback(hObject, eventdata, handles)
+% hObject    handle to clear (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+set(handles.target_oee, 'String', 'Target OEE')
+set(handles.target_ctm, 'String', 'Target CTM')
+set(handles.target_qua, 'String', 'Target QUA')
+set(handles.time_const, 'String', 'Time Const')
+set(handles.invest_const, 'String', 'Invest Const')
+set(handles.weight_oee, 'String', 'Weight OEE')
+set(handles.weight_ctm, 'String', 'Weight CTM')
+set(handles.weight_qua, 'String', 'Weight QUA')
+set(handles.uitable2, 'Data', {});
+
+
+% --- Executes on button press in test.
+function test_Callback(hObject, eventdata, handles)
+% hObject    handle to test (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+set(handles.target_oee, 'String', '0')
+set(handles.target_ctm, 'String', '0')
+set(handles.target_qua, 'String', '0')
+set(handles.time_const, 'String', '10000')
+set(handles.invest_const, 'String', '1000000')
+set(handles.weight_oee, 'String', '0.3')
+set(handles.weight_ctm, 'String', '0.3')
+set(handles.weight_qua, 'String', '0.4')
+set(handles.uitable2, 'Data', {});
 
 
 function target_oee_Callback(hObject, eventdata, handles)
@@ -188,39 +262,74 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-% --- Executes on button press in start.
-function start_Callback(hObject, eventdata, handles)
-% hObject    handle to start (see GCBO)
+
+
+function weight_oee_Callback(hObject, eventdata, handles)
+% hObject    handle to weight_oee (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-
-kt = xlsread('kpi_tech.xlsx', 'C16:P27');
-cof = xlsread('tech_tech.xlsx','A14:L25');
-const = xlsread('constraints.xlsx', 'C2:D13');
-
-target_oee = str2double(get(handles.target_oee, 'String'));
-target_ctm = str2double(get(handles.target_ctm, 'String'));
-target_qua = str2double(get(handles.target_qua, 'String'));
-time_const = str2double(get(handles.time_const, 'String'));
-invest_const = str2double(get(handles.invest_const, 'String'));
-
-handles.result_4 = clc_results(kt, cof, const, target_oee, target_ctm, target_qua, time_const, invest_const);
-disp(handles.result_4)
-
-set(handles.uitable2, 'Data', handles.result_4);
+% Hints: get(hObject,'String') returns contents of weight_oee as text
+%        str2double(get(hObject,'String')) returns contents of weight_oee as a double
 
 
-% --- Executes on button press in clear.
-function clear_Callback(hObject, eventdata, handles)
-% hObject    handle to clear (see GCBO)
+% --- Executes during object creation, after setting all properties.
+function weight_oee_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to weight_oee (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function weight_ctm_Callback(hObject, eventdata, handles)
+% hObject    handle to weight_ctm (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+% Hints: get(hObject,'String') returns contents of weight_ctm as text
+%        str2double(get(hObject,'String')) returns contents of weight_ctm as a double
 
-set(handles.target_oee, 'String', 'Target OEE')
-set(handles.target_ctm, 'String', 'Target CTM')
-set(handles.target_qua, 'String', 'Target QUA')
-set(handles.time_const, 'String', 'Time Const')
-set(handles.invest_const, 'String', 'Tnvest Const')
-set(handles.uitable2, 'Data', {});
+
+% --- Executes during object creation, after setting all properties.
+function weight_ctm_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to weight_ctm (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function weight_qua_Callback(hObject, eventdata, handles)
+% hObject    handle to weight_qua (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of weight_qua as text
+%        str2double(get(hObject,'String')) returns contents of weight_qua as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function weight_qua_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to weight_qua (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
