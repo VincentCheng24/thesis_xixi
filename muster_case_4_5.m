@@ -1,7 +1,9 @@
 kt = xlsread('kpi_tech.xlsx', 'C16:P27');
 cof = xlsread('tech_tech.xlsx','A14:L25');
 lf = xlsread('lf_smau','C3:N9');
-const = xlsread('constraints.xlsx', 'C2:D13');
+const = xlsread('constraints.xlsx', 'E2:F13');
+tech_time_costs = const(:,1);
+tech_invest_costs = const(:,2);
 
 
 target_oee = 0.5;
@@ -25,7 +27,7 @@ end
         chosen = chosens(i,:);
         
         % time constraint
-        time_cost = sum(const(chosen));
+        time_cost = sum(tech_time_costs(chosen));
         if time_cost > time_const
             disp(chosen)
             disp(' is skipped');
@@ -33,7 +35,7 @@ end
         end
         
         % investment constraint
-        invest_cost = sum(const(chosen));
+        invest_cost = sum(tech_invest_costs(chosen));
         if invest_cost > invest_const
             continue
         end
