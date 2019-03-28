@@ -84,7 +84,7 @@ function start_Callback(hObject, eventdata, handles)
 
 kt = xlsread('kpi_tech.xlsx', 'C16:P27');
 cof = xlsread('tech_tech.xlsx','A14:L25');
-const = xlsread('constraints.xlsx', 'C2:D13');
+const = xlsread('constraints.xlsx', 'E2:F13');
 
 target_oee = str2double(get(handles.target_oee, 'String'));
 target_ctm = str2double(get(handles.target_ctm, 'String'));
@@ -104,7 +104,13 @@ transport_costs = str2double(get(handles.transport_costs, 'String'));
 material_costs = str2double(get(handles.material_costs, 'String'));
 labor_productivity = str2double(get(handles.labor_productivity, 'String'));
 
-result = clc_results(kt, cof, const, target_oee, target_ctm, target_qua, time_const, invest_const);
+load('loc_fac.mat');
+
+location_factor = (loc_fac(2, cost_of_capital))/(loc_fac(1, labor_cost) * loc_fac(3, worker_availability)...
+                                                * loc_fac(4, staff_turnover) * loc_fac(5, transport_costs) ...
+                                                * loc_fac(6, material_costs) * loc_fac(7, labor_productivity));
+
+result = clc_results(kt, cof, const, location_factor, target_oee, target_ctm, target_qua, time_const, invest_const);
 % disp(handles.result_4)
 result(:,8) = -result(:,8);
 result_norm = normalize(result(:,6:8), 1, 'range');
@@ -146,6 +152,8 @@ set(handles.staff_turnover, 'String', 'Staff Turnover');
 set(handles.transport_costs, 'String', 'Transport Costs');
 set(handles.material_costs, 'String', 'Material Costs');
 set(handles.labor_productivity, 'String', 'Labor Productivity');
+
+clc; clear all
 
 
 % --- Executes on button press in test.

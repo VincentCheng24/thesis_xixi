@@ -1,4 +1,4 @@
-function result_4 = clc_results(kt, cof, const, target_oee, target_ctm, target_qua, time_const, invest_const)
+function result_4 = clc_results(kt, cof, const, location_factor, target_oee, target_ctm, target_qua, time_const, invest_const)
     chosens = int8(nchoosek(1:12,4));
     result_4 = (zeros(1,8));
     flag=1;
@@ -7,7 +7,7 @@ function result_4 = clc_results(kt, cof, const, target_oee, target_ctm, target_q
         chosen = chosens(i,:);
         
         % time constraint
-        time_cost = sum(const(chosen));
+        time_cost = sum(const(chosen, 1)) * location_factor;
         if time_cost > time_const
             disp(chosen)
             disp(' is skipped');
@@ -15,7 +15,7 @@ function result_4 = clc_results(kt, cof, const, target_oee, target_ctm, target_q
         end
         
         % investment constraint
-        invest_cost = sum(const(chosen));
+        invest_cost = sum(const(chosen, 2));
         if invest_cost > invest_const
             continue
         end
