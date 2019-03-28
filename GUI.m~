@@ -100,8 +100,8 @@ labor_cost = str2double(get(handles.labor_cost, 'String'));
 cost_of_capital = str2double(get(handles.cost_of_capital, 'String'));
 worker_availability = str2double(get(handles.worker_availability, 'String'));
 staff_turnover = str2double(get(handles.staff_turnover, 'String'));
-transport_costs = str2double(get(handles.transport_costs, 'String'));
-material_costs = str2double(get(handles.material_costs, 'String'));
+transport_cost = str2double(get(handles.transport_cost, 'String'));
+material_cost = str2double(get(handles.material_cost, 'String'));
 labor_productivity = str2double(get(handles.labor_productivity, 'String'));
 
 result = clc_results(kt, cof, const, target_oee, target_ctm, target_qua, time_const, invest_const);
@@ -140,12 +140,12 @@ set(handles.weight_qua, 'String', 'Weight QUA')
 set(handles.uitable2, 'Data', {});
 
 set(handles.labor_cost, 'String', 'Labor Costs');
-set(handles.cost_of_capital, 'String', 'Cost of Capital');
-set(handles.worker_availability, 'String', 'Worker Availability');
-set(handles.staff_turnover, 'String', 'Staff Turnover');
-set(handles.transport_costs, 'String', 'Transport Costs');
-set(handles.material_costs, 'String', 'Material Costs');
-set(handles.labor_productivity, 'String', 'Labor Productivity');
+set(handles.cost_of_capital, 'String', 'Cost of apital');
+set(handles.worker_availability, 'String');
+set(handles.staff_turnover, 'String');
+set(handles.transport_cost, 'String');
+set(handles.material_cost, 'String');
+set(handles.labor_productivity, 'String');
 
 
 % --- Executes on button press in test.
@@ -162,14 +162,6 @@ set(handles.weight_oee, 'String', '0.3')
 set(handles.weight_ctm, 'String', '0.3')
 set(handles.weight_qua, 'String', '0.4')
 set(handles.uitable2, 'Data', {});
-
-set(handles.labor_cost, 'String', '1');
-set(handles.cost_of_capital, 'String', '2');
-set(handles.worker_availability, 'String', '1');
-set(handles.staff_turnover, 'String', '1');
-set(handles.transport_costs, 'String', '2');
-set(handles.material_costs, 'String', '1');
-set(handles.labor_productivity, 'String', '3');
 
 
 function target_oee_Callback(hObject, eventdata, handles)
