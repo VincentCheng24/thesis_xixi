@@ -5,10 +5,10 @@ function draw_3d(data)
     z = data(:,3);
     c = linspace(1,10,length(x));
     f = scatter3(x, y, z, [], c, 'o', 'filled', 'LineWidth', 1);
-    title('xxxx results')
-    xlabel('oee')
-    ylabel('ctm_sa')
-    zlabel('qly_cost')
+    title('Simulation results')
+    xlabel('OEE')
+    ylabel('Costumer Satisfication')
+    zlabel('Quality Cost')
     colormap default
 end
 

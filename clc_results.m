@@ -1,70 +1,74 @@
-function result_4 = clc_results(kt, cof, const, location_factor, target_oee, target_ctm, target_qua, time_const, invest_const)
-    chosens = int8(nchoosek(1:12,4));
-    result_4 = (zeros(1,8));
+function result = clc_results(K, kt, cof, const, location_factor, target_oee, target_ctm, target_qua, time_const, invest_const)
+    
+    % k techs + 3 kpi + sum
+    result = (zeros(1,K+4));
     flag=1;
-    for i=1:nchoosek(12,4)
+    
+    for k = 1: K
+        chosens = int8(nchoosek(1:12,k));
         
-        chosen = chosens(i,:);
-        
-        % time constraint
-        time_cost = sum(const(chosen, 1)) * location_factor;
-        if time_cost > time_const
-            disp(chosen)
-            disp(' is skipped');
-            continue
-        end
-        
-        % investment constraint
-        invest_cost = sum(const(chosen, 2));
-        if invest_cost > invest_const
-            continue
-        end
-        
-        permutation4 = perms(chosen);
-        
-        for j=1:factorial(4)
-            pmt=permutation4(j,:);
-            
-            cof_mat = [cof(pmt(1),pmt(2)), ...
-                    cof(pmt(1),pmt(3)) ...
-                    cof(pmt(1),pmt(4)) ...
-                    cof(pmt(2),pmt(3)) ...
-                    cof(pmt(2),pmt(4)) ...
-                    cof(pmt(3),pmt(4)) ];
-            
-   
-            if ~ all(cof_mat(:) > 0)
+        for i=1:nchoosek(12,k)
+
+            chosen = chosens(i,:);
+
+            % time constraint
+            time_cost = sum(const(chosen, 1)) * location_factor;
+            if time_cost > time_const
+                disp(chosen)
+                disp(' is skipped');
                 continue
             end
 
+            % investment constraint
+            invest_cost = sum(const(chosen, 2));
+            if invest_cost > invest_const
+                continue
+            end
 
-            oee =    (4-0) * (kt(pmt(1),1) * kt(pmt(1),8) / kt(pmt(1),2)) ...
-                   + (4-1) * (kt(pmt(2),1) * kt(pmt(2),8) / kt(pmt(2),2)) *  cof(pmt(1),pmt(2))...
-                   + (4-2) * (kt(pmt(3),1) * kt(pmt(3),8) / kt(pmt(3),2)) *  cof(pmt(2),pmt(3))...
-                   + (4-3) * (kt(pmt(4),1) * kt(pmt(4),8) / kt(pmt(4),2)) *  cof(pmt(3),pmt(4));
+            permutation = perms(chosen);
 
-            ctm_sa  =   ((4-0) * (kt(pmt(1),1) * kt(pmt(1),9))  ...
-                       + (4-1) * (kt(pmt(2),1) * kt(pmt(2),9)) * cof(pmt(1),pmt(2))...
-                       + (4-2) * (kt(pmt(3),1) * kt(pmt(3),9)) * cof(pmt(2),pmt(3))...
-                       + (4-3) * (kt(pmt(4),1) * kt(pmt(4),9)) * cof(pmt(3),pmt(4))) * (-1);
+            for m=1:factorial(k)
+                pmt=permutation(m,:);
 
-           qly_cost =   ((4-0) * kt(pmt(1),7) *  ...
-                       + (4-1) * kt(pmt(2),7) * cof(pmt(1),pmt(2)) ...
-                       + (4-2) * kt(pmt(3),7) * cof(pmt(2),pmt(3)) ...
-                       + (4-3) * kt(pmt(4),7) * cof(pmt(3),pmt(4))) * (-250);
+                cof_mat = [];
+                for p = 1:k
+                    for q = p+1:k
+                        cof_mat = [cof_mat, cof(pmt(p),pmt(q))];
+                    end
+                end
+
+                if ~ all(cof_mat(:) > 0)
+                    continue
+                end
+
+                oee = (kt(pmt(1),1) * kt(pmt(1),8) / kt(pmt(1),2));
+                ctm_sa  =   kt(pmt(1),1) * kt(pmt(1),9);
+                qly_cost =   kt(pmt(1),7);
+
+                if k > 2
+                    for j = 2:k
+                        tmp_oee = (kt(pmt(j),1) * kt(pmt(j),8) / kt(pmt(j),2)) * cof(pmt(j-1),pmt(j));
+                        tmp_ctm_sa = (kt(pmt(j),1) * kt(pmt(j),9)) * cof(pmt(j-1),pmt(j));
+                        tmp_qly_cost = kt(pmt(j),7) * cof(pmt(j-1),pmt(j));
+                        oee = oee + tmp_oee;
+                        ctm_sa = ctm_sa + tmp_ctm_sa;
+                        qly_cost = qly_cost + tmp_qly_cost;
+                    end
+                end
+                ctm_sa = -ctm_sa;
+                qly_cost = qly_cost * (-250);
 
 
-            if oee > target_oee && ctm_sa > target_ctm && qly_cost < target_qua
-  
-               result_4(flag,1:4) = pmt;
-               result_4(flag,6) = oee;
-               result_4(flag,7) = ctm_sa;
-               result_4(flag,8) = qly_cost;
-%                a_sort4 = sortrows(answer_4,-6)  
-%               answer(flag,6) = cost;
-%               answer(flag,7) = time;            
-               flag=flag+1;       
+                if oee > target_oee && ctm_sa > target_ctm && qly_cost > target_qua
+
+                   result(flag,1:k) = pmt;
+                   result(flag,K+1) = k;
+                   result(flag,K+2) = oee;
+                   result(flag,K+3) = ctm_sa;
+                   result(flag,K+4) = qly_cost;           
+                   flag=flag+1;       
+                end
             end
         end
-     end
+    end
 end

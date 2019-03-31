@@ -22,7 +22,7 @@ function varargout = GUI(varargin)
 
 % Edit the above text to modify the response to help GUI
 
-% Last Modified by GUIDE v2.5 28-Mar-2019 21:17:11
+% Last Modified by GUIDE v2.5 31-Mar-2019 19:26:41
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -91,41 +91,65 @@ target_ctm = str2double(get(handles.target_ctm, 'String'));
 target_qua = str2double(get(handles.target_qua, 'String'));
 time_const = str2double(get(handles.time_const, 'String'));
 invest_const = str2double(get(handles.invest_const, 'String'));
+max_num_tech = str2double(get(handles.max_num_tech, 'String'));
 
 weight_oee = str2double(get(handles.weight_oee, 'String'));
 weight_ctm = str2double(get(handles.weight_ctm, 'String'));
 weight_qua = str2double(get(handles.weight_qua, 'String'));
 
-labor_cost = str2double(get(handles.labor_cost, 'String'));
-cost_of_capital = str2double(get(handles.cost_of_capital, 'String'));
-worker_availability = str2double(get(handles.worker_availability, 'String'));
-staff_turnover = str2double(get(handles.staff_turnover, 'String'));
-transport_costs = str2double(get(handles.transport_costs, 'String'));
-material_costs = str2double(get(handles.material_costs, 'String'));
-labor_productivity = str2double(get(handles.labor_productivity, 'String'));
+labor_cost = get(handles.popupmenu2, 'Value') - 1;
+cost_of_capital = get(handles.popupmenu3, 'Value') - 1;
+worker_availability = get(handles.popupmenu4, 'Value') - 1;
+staff_turnover = get(handles.popupmenu5, 'Value') - 1;
+transport_costs = get(handles.popupmenu6, 'Value') - 1;
+material_costs = get(handles.popupmenu7, 'Value') - 1;
+labor_productivity = get(handles.popupmenu8, 'Value') - 1;
 
 load('loc_fac.mat');
 
 location_factor = (loc_fac(2, cost_of_capital))/(loc_fac(1, labor_cost) * loc_fac(3, worker_availability)...
                                                 * loc_fac(4, staff_turnover) * loc_fac(5, transport_costs) ...
                                                 * loc_fac(6, material_costs) * loc_fac(7, labor_productivity));
-
-result = clc_results(kt, cof, const, location_factor, target_oee, target_ctm, target_qua, time_const, invest_const);
+K = max_num_tech;
+result = clc_results(K, kt, cof, const, location_factor, target_oee, target_ctm, target_qua, time_const, invest_const);
 % disp(handles.result_4)
-result(:,8) = -result(:,8);
-result_norm = normalize(result(:,6:8), 1, 'range');
+result_norm = normalize(result(:,K+2:K+4), 1, 'range');
 sum = weight_oee * result_norm(:,1) + weight_ctm * result_norm(:,2) +  weight_qua * result_norm(:,3);
-
-% result(:,6:8) = normalize(result(:,6:8), 1, 'range');
-% sum = weight_oee * result(:,6) + weight_ctm * result(:,7) +  weight_qua * result(:,8);
+draw_3d(result_norm)
 
 result = [result, sum];
-result = sortrows(result, 9, 'descend');
+result = sortrows(result, K+5, 'descend');
 
 handles.result = result;
-% data = handles.result(:, 6:8);
-draw_3d(result_norm)
-set(handles.uitable2, 'Data', handles.result);
+
+
+
+% set UI tables
+
+ColumnName = {'Tech Orders', 'Num Techs','OEE', 'Costmur Sati', 'Quality Const', 'SUM'};
+ColumnFormat = {'char', 'char', 'char', 'char', 'char', 'char'};
+
+tech_order = result(:, 1:K);
+tech_order_strs = cell(size(tech_order, 1), 1);
+
+for j = 1:size(tech_order, 1)
+    a = tech_order(j,:);
+    order_str = sprintf('%d', a(1));
+    for i = 2:size(a, 2)
+        if  a(i) == 0
+            break
+        end
+        order_str = strcat(order_str, '->', sprintf('%d', a(i)));
+    end
+    tech_order_strs{j} = order_str;
+end
+
+data = handles.result(:, K+1:end);
+datacell = [tech_order_strs, num2cell(data)];
+set(handles.uitable2, 'Data', datacell, 'ColumnName', ColumnName, ...
+    'RowName','numbered', 'ColumnWidth','auto', 'ColumnFormat', ColumnFormat);
+
+disp('well done')
 
 
 % --- Executes on button press in clear.
@@ -140,20 +164,21 @@ set(handles.target_ctm, 'String', 'Target CTM')
 set(handles.target_qua, 'String', 'Target QUA')
 set(handles.time_const, 'String', 'Time Const')
 set(handles.invest_const, 'String', 'Invest Const')
+set(handles.max_num_tech, 'String', 'Max Num Techs')
 set(handles.weight_oee, 'String', 'Weight OEE')
 set(handles.weight_ctm, 'String', 'Weight CTM')
 set(handles.weight_qua, 'String', 'Weight QUA')
-set(handles.uitable2, 'Data', {});
+set(handles.uitable2, 'Data', {}, 'ColumnName', {}, 'RowName', {});
 
-set(handles.labor_cost, 'String', 'Labor Costs');
-set(handles.cost_of_capital, 'String', 'Cost of Capital');
-set(handles.worker_availability, 'String', 'Worker Availability');
-set(handles.staff_turnover, 'String', 'Staff Turnover');
-set(handles.transport_costs, 'String', 'Transport Costs');
-set(handles.material_costs, 'String', 'Material Costs');
-set(handles.labor_productivity, 'String', 'Labor Productivity');
+set(handles.popupmenu2, 'Value', 1);
+set(handles.popupmenu3, 'Value', 1);
+set(handles.popupmenu4, 'Value', 1);
+set(handles.popupmenu5, 'Value', 1);
+set(handles.popupmenu6, 'Value', 1);
+set(handles.popupmenu7, 'Value', 1);
+set(handles.popupmenu8, 'Value', 1);
 
-clc; clear all
+clc; clear all;
 
 
 % --- Executes on button press in test.
@@ -166,18 +191,33 @@ set(handles.target_ctm, 'String', '0')
 set(handles.target_qua, 'String', '0')
 set(handles.time_const, 'String', '10000')
 set(handles.invest_const, 'String', '1000000')
+set(handles.max_num_tech, 'String', '4')
 set(handles.weight_oee, 'String', '0.3')
 set(handles.weight_ctm, 'String', '0.3')
 set(handles.weight_qua, 'String', '0.4')
 set(handles.uitable2, 'Data', {});
 
-set(handles.labor_cost, 'String', '1');
-set(handles.cost_of_capital, 'String', '2');
-set(handles.worker_availability, 'String', '1');
-set(handles.staff_turnover, 'String', '1');
-set(handles.transport_costs, 'String', '2');
-set(handles.material_costs, 'String', '1');
-set(handles.labor_productivity, 'String', '3');
+set(handles.popupmenu2, 'Value', 2);
+set(handles.popupmenu3, 'Value', 3);
+set(handles.popupmenu4, 'Value', 2);
+set(handles.popupmenu5, 'Value', 3);
+set(handles.popupmenu6, 'Value', 2);
+set(handles.popupmenu7, 'Value', 3);
+set(handles.popupmenu8, 'Value', 4);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 function target_oee_Callback(hObject, eventdata, handles)
@@ -515,6 +555,236 @@ function labor_productivity_Callback(hObject, eventdata, handles)
 % --- Executes during object creation, after setting all properties.
 function labor_productivity_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to labor_productivity (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in popupmenu1.
+function popupmenu1_Callback(hObject, eventdata, handles)
+% hObject    handle to popupmenu1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns popupmenu1 contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from popupmenu1
+
+
+% --- Executes during object creation, after setting all properties.
+function popupmenu1_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to popupmenu1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in listbox2.
+function listbox2_Callback(hObject, eventdata, handles)
+% hObject    handle to listbox2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns listbox2 contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from listbox2
+
+
+% --- Executes during object creation, after setting all properties.
+function listbox2_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to listbox2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: listbox controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in popupmenu2.
+function popupmenu2_Callback(hObject, eventdata, handles)
+% hObject    handle to popupmenu2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns popupmenu2 contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from popupmenu2
+
+
+% --- Executes during object creation, after setting all properties.
+function popupmenu2_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to popupmenu2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in popupmenu3.
+function popupmenu3_Callback(hObject, eventdata, handles)
+% hObject    handle to popupmenu3 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns popupmenu3 contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from popupmenu3
+
+
+% --- Executes during object creation, after setting all properties.
+function popupmenu3_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to popupmenu3 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in popupmenu4.
+function popupmenu4_Callback(hObject, eventdata, handles)
+% hObject    handle to popupmenu4 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns popupmenu4 contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from popupmenu4
+
+
+% --- Executes during object creation, after setting all properties.
+function popupmenu4_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to popupmenu4 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in popupmenu5.
+function popupmenu5_Callback(hObject, eventdata, handles)
+% hObject    handle to popupmenu5 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns popupmenu5 contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from popupmenu5
+
+
+% --- Executes during object creation, after setting all properties.
+function popupmenu5_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to popupmenu5 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in popupmenu6.
+function popupmenu6_Callback(hObject, eventdata, handles)
+% hObject    handle to popupmenu6 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns popupmenu6 contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from popupmenu6
+
+
+% --- Executes during object creation, after setting all properties.
+function popupmenu6_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to popupmenu6 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in popupmenu7.
+function popupmenu7_Callback(hObject, eventdata, handles)
+% hObject    handle to popupmenu7 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns popupmenu7 contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from popupmenu7
+
+
+% --- Executes during object creation, after setting all properties.
+function popupmenu7_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to popupmenu7 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in popupmenu8.
+function popupmenu8_Callback(hObject, eventdata, handles)
+% hObject    handle to popupmenu8 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns popupmenu8 contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from popupmenu8
+
+
+% --- Executes during object creation, after setting all properties.
+function popupmenu8_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to popupmenu8 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function max_num_tech_Callback(hObject, eventdata, handles)
+% hObject    handle to max_num_tech (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of max_num_tech as text
+%        str2double(get(hObject,'String')) returns contents of max_num_tech as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function max_num_tech_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to max_num_tech (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
