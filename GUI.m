@@ -82,9 +82,9 @@ function start_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 
-kt = xlsread('kpi_tech.xlsx', 'C16:P27');
-cof = xlsread('tech_tech.xlsx','A14:L25');
-const = xlsread('constraints.xlsx', 'E2:F13');
+kt = xlsread('master_data.xlsx','kpi_tech','C4:P15');
+cof = xlsread('master_data.xlsx','tech_tech','C4:N15');
+const = xlsread('master_data.xlsx','constraints','F5:G16');
 
 target_oee = str2double(get(handles.target_oee, 'String'));
 target_ctm = str2double(get(handles.target_ctm, 'String'));
@@ -105,11 +105,16 @@ transport_costs = get(handles.popupmenu6, 'Value') - 1;
 material_costs = get(handles.popupmenu7, 'Value') - 1;
 labor_productivity = get(handles.popupmenu8, 'Value') - 1;
 
-load('loc_fac.mat');
+% load('loc_fac.mat');
+lf_level = xlsread('master_data.xlsx','lf_level','C5:E11');
 
-location_factor = (loc_fac(2, cost_of_capital))/(loc_fac(1, labor_cost) * loc_fac(3, worker_availability)...
-                                                * loc_fac(4, staff_turnover) * loc_fac(5, transport_costs) ...
-                                                * loc_fac(6, material_costs) * loc_fac(7, labor_productivity));
+% location_factor = (loc_fac(2, cost_of_capital))/(loc_fac(1, labor_cost) * loc_fac(3, worker_availability)...
+%                                                 * loc_fac(4, staff_turnover) * loc_fac(5, transport_costs) ...
+%                                                 * loc_fac(6, material_costs) * loc_fac(7, labor_productivity));
+
+location_factor = (lf_level(2, cost_of_capital))/(lf_level(1, labor_cost) * lf_level(3, worker_availability)...
+                                                * lf_level(4, staff_turnover) * lf_level(5, transport_costs) ...
+                                                * lf_level(6, material_costs) * lf_level(7, labor_productivity));
 K = max_num_tech;
 result = clc_results(K, kt, cof, const, location_factor, target_oee, target_ctm, target_qua, time_const, invest_const);
 % disp(handles.result_4)
