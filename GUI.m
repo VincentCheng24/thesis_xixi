@@ -127,11 +127,13 @@ result = sortrows(result, K+5, 'descend');
 
 handles.result = result;
 
+% me_invest = sum/invest_cost
+% me_time = sum/time_cost
 
 
 % set UI tables
 
-ColumnName = {'Tech Orders', 'Num Techs','OEE', 'Costmur Sati', 'Quality Const', 'SUM'};
+ColumnName = {'Tech Orders', 'Num Techs','OEE', 'Customer Satisfaction', 'Quality Cost', 'Weighted Value'};
 ColumnFormat = {'char', 'char', 'char', 'char', 'char', 'char'};
 
 tech_order = result(:, 1:K);

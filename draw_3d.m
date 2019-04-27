@@ -7,7 +7,7 @@ function draw_3d(data)
     f = scatter3(x, y, z, [], c, 'o', 'filled', 'LineWidth', 1);
     title('Simulation results')
     xlabel('OEE')
-    ylabel('Costumer Satisfication')
+    ylabel('Customer Satisfaction')
     zlabel('Quality Cost')
     colormap default
 end
