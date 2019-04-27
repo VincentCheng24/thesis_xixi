@@ -22,7 +22,7 @@ function varargout = GUI(varargin)
 
 % Edit the above text to modify the response to help GUI
 
-% Last Modified by GUIDE v2.5 31-Mar-2019 20:39:12
+% Last Modified by GUIDE v2.5 27-Apr-2019 22:20:09
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -105,58 +105,68 @@ transport_costs = get(handles.popupmenu6, 'Value') - 1;
 material_costs = get(handles.popupmenu7, 'Value') - 1;
 labor_productivity = get(handles.popupmenu8, 'Value') - 1;
 
+if get(handles.robust,'Value') == 0 
+    robust = false;
+else
+    robust = true;
+end
+
 % load('loc_fac.mat');
 lf_level = xlsread('master_data.xlsx','lf_level','C5:E11');
 
-% location_factor = (loc_fac(2, cost_of_capital))/(loc_fac(1, labor_cost) * loc_fac(3, worker_availability)...
-%                                                 * loc_fac(4, staff_turnover) * loc_fac(5, transport_costs) ...
-%                                                 * loc_fac(6, material_costs) * loc_fac(7, labor_productivity));
 
 location_factor = (lf_level(2, cost_of_capital))/(lf_level(1, labor_cost) * lf_level(3, worker_availability)...
                                                 * lf_level(4, staff_turnover) * lf_level(5, transport_costs) ...
                                                 * lf_level(6, material_costs) * lf_level(7, labor_productivity));
 K = max_num_tech;
-result = clc_results(K, kt, cof, const, location_factor, target_oee, target_ctm, target_qua, time_const, invest_const);
+handles.K = K;
+[result, time_costs, invest_costs] = clc_results(K, kt, cof, const, location_factor, target_oee, target_ctm, target_qua, time_const, invest_const, robust);
 % disp(handles.result_4)
 result_norm = normalize(result(:,K+2:K+4), 1, 'range');
 sum = weight_oee * result_norm(:,1) + weight_ctm * result_norm(:,2) +  weight_qua * result_norm(:,3);
 draw_3d(result_norm)
 
-result = [result, sum];
+
+unit_cost = normalize(sum ./ invest_costs, 1, 'range');
+unit_time = normalize(sum ./ time_costs, 1, 'range');
+
+result = [result, sum, unit_cost, unit_time];
+
 result = sortrows(result, K+5, 'descend');
-
 handles.result = result;
+set_ui_table(K, handles)
 
-% me_invest = sum/invest_cost
-% me_time = sum/time_cost
+% Update handles structure 
+guidata (hObject, handles);
 
 
-% set UI tables
+function set_ui_table(K, handles)
+    % set UI tables
 
-ColumnName = {'Tech Orders', 'Num Techs','OEE', 'Customer Satisfaction', 'Quality Cost', 'Weighted Value'};
-ColumnFormat = {'char', 'char', 'char', 'char', 'char', 'char'};
+    ColumnName = {'Tech Orders', 'Num Techs','OEE', 'Customer Satisfaction', 'Quality Cost', 'Weighted Value', 'Unit Cost', 'Unit Time'};
+    ColumnFormat = {'char', 'char', 'char', 'char', 'char', 'char', 'char', 'char'};
 
-tech_order = result(:, 1:K);
-tech_order_strs = cell(size(tech_order, 1), 1);
+    tech_order = handles.result(:, 1:K);
+    tech_order_strs = cell(size(tech_order, 1), 1);
 
-for j = 1:size(tech_order, 1)
-    a = tech_order(j,:);
-    order_str = sprintf('%d', a(1));
-    for i = 2:size(a, 2)
-        if  a(i) == 0
-            break
+    for j = 1:size(tech_order, 1)
+        a = tech_order(j,:);
+        order_str = sprintf('%d', a(1));
+        for i = 2:size(a, 2)
+            if  a(i) == 0
+                break
+            end
+            order_str = strcat(order_str, '->', sprintf('%d', a(i)));
         end
-        order_str = strcat(order_str, '->', sprintf('%d', a(i)));
+        tech_order_strs{j} = order_str;
     end
-    tech_order_strs{j} = order_str;
-end
 
-data = handles.result(:, K+1:end);
-datacell = [tech_order_strs, num2cell(data)];
-set(handles.uitable2, 'Data', datacell, 'ColumnName', ColumnName, ...
-    'RowName','numbered', 'ColumnWidth','auto', 'ColumnFormat', ColumnFormat);
+    data = handles.result(:, K+1:end);
+    datacell = [tech_order_strs, num2cell(data)];
+    set(handles.uitable2, 'Data', datacell, 'ColumnName', ColumnName, ...
+        'RowName','numbered', 'ColumnWidth','auto', 'ColumnFormat', ColumnFormat);
 
-disp('well done')
+    disp('well done')
 
 
 % --- Executes on button press in clear.
@@ -213,7 +223,28 @@ set(handles.popupmenu7, 'Value', 3);
 set(handles.popupmenu8, 'Value', 4);
 
 
+% --- Executes on button press in sort_by_unit_cost.
+function sort_by_unit_cost_Callback(hObject, eventdata, handles)
+% hObject    handle to sort_by_unit_cost (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.result = sortrows(handles.result, handles.K+6, 'descend');
+set_ui_table(handles.K, handles)
 
+% Update handles structure 
+guidata (hObject, handles);
+
+
+% --- Executes on button press in sort_by_unit_time.
+function sort_by_unit_time_Callback(hObject, eventdata, handles)
+% hObject    handle to sort_by_unit_time (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.result = sortrows(handles.result, handles.K+7, 'descend');
+set_ui_table(handles.K, handles)
+
+% Update handles structure 
+guidata (hObject, handles);
 
 
 
@@ -869,3 +900,12 @@ function popupmenu12_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in robust.
+function robust_Callback(hObject, eventdata, handles)
+% hObject    handle to robust (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of robust
