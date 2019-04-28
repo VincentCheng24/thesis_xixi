@@ -124,8 +124,7 @@ handles.K = K;
 % disp(handles.result_4)
 result_norm = normalize(result(:,K+2:K+4), 1, 'range');
 sum = weight_oee * result_norm(:,1) + weight_ctm * result_norm(:,2) +  weight_qua * result_norm(:,3);
-draw_3d(result_norm)
-
+sum = normalize(sum, 1, 'range');
 
 unit_cost = normalize(sum ./ invest_costs, 1, 'range');
 unit_time = normalize(sum ./ time_costs, 1, 'range');
@@ -133,6 +132,8 @@ unit_time = normalize(sum ./ time_costs, 1, 'range');
 result = [result, sum, unit_cost, unit_time];
 
 result = sortrows(result, K+5, 'descend');
+draw_3d(result(:, K+2:K+4))
+
 handles.result = result;
 set_ui_table(K, handles)
 
